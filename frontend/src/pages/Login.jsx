@@ -1,17 +1,37 @@
-import React, { useState } from "react";
-import { FaSignInAlt } from "react-icons/fa";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { useSelector,useDispatch } from "react-redux";
-import { login } from "../features/auth/authSlice";
+import { useNavigate } from "react-router-dom";
+import { FaSignInAlt } from "react-icons/fa";
+import { useSelector, useDispatch } from "react-redux";
+import { login, reset } from "../features/auth/authSlice";
+import Spinner from "../components/Spinner";
 
 function Login() {
-  const [formdata, setFormData] = useState({
+  const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const {email, password } = formdata;
-  const dispatch=useDispatch();
-  const {user,isLoading,isSucess,message}=useSelector((state)=>state.auth)
+  const { email, password } = formData;
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { user, isLoading, isError, isSuccess, message } = useSelector(
+    (state) => state.auth
+  );
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(message);
+    }
+
+    // Redirect when logged in
+    if (isSuccess || user) {
+      navigate("/");
+    }
+
+    dispatch(reset());
+  }, [isError, isSuccess, user, message, navigate, dispatch]);
 
   const onChange = (e) => {
     setFormData((prevState) => ({
@@ -21,19 +41,24 @@ function Login() {
   };
   const onSubmit = (e) => {
     e.preventDefault();
-    const userData={
-      email,password
-    }
+    const userData = {
+      email,
+      password,
+    };
     dispatch(login(userData));
-   
   };
+
+  if (isLoading) {
+    return <Spinner />;
+  }
+
   return (
     <>
       <section className="heading">
         <h1>
           <FaSignInAlt /> Login
         </h1>
-        <p>Please Login to get support</p>
+        <p>Please log in to get support</p>
       </section>
       <section className="form">
         <form onSubmit={onSubmit}>
@@ -45,7 +70,7 @@ function Login() {
               name="email"
               value={email}
               onChange={onChange}
-              placeholder="Enter your e-mail"
+              placeholder="Enter your email"
               required
             />
           </div>
@@ -57,7 +82,7 @@ function Login() {
               name="password"
               value={password}
               onChange={onChange}
-              placeholder="Enter your password"
+              placeholder="Enter password"
               required
             />
           </div>
@@ -69,5 +94,4 @@ function Login() {
     </>
   );
 }
-
 export default Login;
